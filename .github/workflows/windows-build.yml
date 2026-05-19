@@ -1,0 +1,130 @@
+name: Windows x64 build
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "v*"
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-windows-x64:
+    name: Build Windows x64 executable (MinGW)
+    runs-on: windows-latest
+
+    # Run every step inside the MSYS2 MINGW64 shell so we have a single
+    # consistent gcc / cmake / make / wxWidgets toolchain.
+    defaults:
+      run:
+        shell: msys2 {0}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up MSYS2 (MINGW64)
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            base-devel
+            git
+            zip
+            mingw-w64-x86_64-toolchain
+            mingw-w64-x86_64-cmake
+            mingw-w64-x86_64-make
+            mingw-w64-x86_64-pkgconf
+            mingw-w64-x86_64-gettext
+            mingw-w64-x86_64-wxwidgets3.2-msw
+
+      - name: Show toolchain versions
+        run: |
+          gcc --version
+          g++ --version
+          cmake --version
+          mingw32-make --version
+          wx-config --version --selected-config
+          msgfmt --version | head -n 1
+
+      - name: Configure (CMake / MinGW Makefiles, x64 Release)
+        run: |
+          cmake -S . -B build \
+            -G "MinGW Makefiles" \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX="$(pwd)/build/dist" \
+            -DwxWidgets_CONFIG_EXECUTABLE=/mingw64/bin/wx-config
+
+      - name: Build
+        run: cmake --build build --config Release -j
+
+      - name: Install (stage into build/dist)
+        run: cmake --install build --config Release
+
+      - name: Bundle MinGW/wxWidgets runtime DLLs next to the .exe
+        run: |
+          set -e
+          EXE="build/dist/wxmp3gain.exe"
+          if [ ! -f "$EXE" ]; then
+            echo "Built executable not found at $EXE"
+            ls -la build/dist || true
+            exit 1
+          fi
+          # Walk the PE import table recursively (ldd resolves through the
+          # MINGW64 sysroot) and copy every DLL that lives under /mingw64/bin
+          # so the resulting folder is self-contained on a clean Windows host.
+          copy_deps() {
+            local target="$1"
+            ldd "$target" \
+              | awk '/=>/ {print $3}' \
+              | grep -i '^/mingw64/bin/' \
+              | sort -u \
+              | while read -r dep; do
+                  local name
+                  name="$(basename "$dep")"
+                  if [ ! -f "build/dist/$name" ]; then
+                    cp -v "$dep" "build/dist/"
+                    # Recurse to pick up transitive dependencies.
+                    copy_deps "build/dist/$name"
+                  fi
+                done
+          }
+          copy_deps "$EXE"
+
+      - name: Verify x64 architecture of the executable
+        run: |
+          file build/dist/wxmp3gain.exe
+          file build/dist/wxmp3gain.exe | grep -q "x86-64"
+
+      - name: List final dist contents
+        run: ls -la build/dist
+
+      - name: Create distributable zip
+        run: |
+          cd build
+          zip -r "wxmp3gain-windows-x64.zip" dist
+          ls -la wxmp3gain-windows-x64.zip
+
+      - name: Upload build artifact (folder)
+        uses: actions/upload-artifact@v4
+        with:
+          name: wxmp3gain-windows-x64
+          path: build/dist/
+          if-no-files-found: error
+
+      - name: Upload build artifact (zip)
+        uses: actions/upload-artifact@v4
+        with:
+          name: wxmp3gain-windows-x64-zip
+          path: build/wxmp3gain-windows-x64.zip
+          if-no-files-found: error
+
+      - name: Attach binary to GitHub Release (tag pushes only)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/wxmp3gain-windows-x64.zip
