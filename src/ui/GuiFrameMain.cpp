@@ -14,6 +14,8 @@
 #include <wx/filefn.h>
 #include <wx/msgdlg.h>
 
+#include <algorithm>
+
 GuiFrameMain::GuiFrameMain(wxWindow *parent) : FrameMain(parent), m_processRunning(false) {
     // Disable status bar pane used to display menu and toolbar help
     SetStatusBarPane(-1);
@@ -33,6 +35,24 @@ GuiFrameMain::GuiFrameMain(wxWindow *parent) : FrameMain(parent), m_processRunni
     gui_lstFiles->InsertColumn(ID_LIST_GAIN_DB, wxString::FromUTF8("增益 (dB)"), wxLIST_FORMAT_LEFT, 80);
     gui_lstFiles->InsertColumn(ID_LIST_GAIN_MP3, wxString::FromUTF8("转换后音量"), wxLIST_FORMAT_LEFT, 80);
     gui_lstFiles->InsertColumn(ID_LIST_TAG_INFO, wxString::FromUTF8("标签信息"), wxLIST_FORMAT_LEFT, 70);
+
+    // Empty-state watermark hint shown when the file list is empty.
+    // Created as a child of gui_lstFiles so it floats on top of the list's
+    // client area. wxString::FromUTF8 ensures the Chinese text is decoded
+    // correctly regardless of the source file's BOM/locale on MSW.
+    mp_emptyHint = new wxStaticText(gui_lstFiles, wxID_ANY,
+                                    wxString::FromUTF8("仅支持 MP3 文件导入或拖拽到这里"),
+                                    wxDefaultPosition, wxDefaultSize,
+                                    wxALIGN_CENTRE_HORIZONTAL);
+    mp_emptyHint->SetForegroundColour(wxColour(150, 150, 150));
+    wxFont hintFont = mp_emptyHint->GetFont();
+    hintFont.SetPointSize(hintFont.GetPointSize() + 3);
+    mp_emptyHint->SetFont(hintFont);
+
+    // Recenter the hint when the list is resized.
+    gui_lstFiles->Bind(wxEVT_SIZE, &GuiFrameMain::OnlstFilesSize, this);
+
+    updateEmptyHint();
 
     // Set statusbar widths
     const int wxStatusBarWidths[3] = {-10, -10, -5};
@@ -125,6 +145,28 @@ void GuiFrameMain::OnlstFilesKeyDown(wxListEvent &event) {
             mnuRemoveFiles(event);
     }
     event.Skip();
+}
+
+void GuiFrameMain::OnlstFilesSize(wxSizeEvent &event) {
+    updateEmptyHint();
+    event.Skip();
+}
+
+void GuiFrameMain::updateEmptyHint() {
+    if (mp_emptyHint == nullptr)
+        return;
+
+    const bool empty = (gui_lstFiles->GetItemCount() == 0);
+    if (mp_emptyHint->IsShown() != empty)
+        mp_emptyHint->Show(empty);
+
+    if (empty) {
+        const wxSize clientSize = gui_lstFiles->GetClientSize();
+        const wxSize hintSize = mp_emptyHint->GetBestSize();
+        const int x = std::max(0, (clientSize.GetWidth() - hintSize.GetWidth()) / 2);
+        const int y = std::max(0, (clientSize.GetHeight() - hintSize.GetHeight()) / 2);
+        mp_emptyHint->SetSize(x, y, hintSize.GetWidth(), hintSize.GetHeight());
+    }
 }
 
 void GuiFrameMain::btnProcessStop(wxCommandEvent &event) {
@@ -367,6 +409,12 @@ void GuiFrameMain::OnTimer1Trigger(wxTimerEvent &event) {
     gui_menuBar->Enable(ID_DELETE_TAG, gui_lstFiles->GetItemCount() > 0 && mp_appSettings->getTagOptions() != 2 && !m_processRunning);
 
     gui_btnStop->Enable(m_processRunning);
+
+    // Make sure the empty-state hint reflects the current list contents
+    // even on platforms where EVT_LIST_INSERT_ITEM fires before the item
+    // is actually added (this handler runs after the deferred timer).
+    updateEmptyHint();
+
     event.Skip(false);
 }
 
@@ -401,6 +449,10 @@ void GuiFrameMain::updateControls() {
      *   on wxMSW -> triggered after item is added.
      */
     m_timer1.Start(20, true);
+
+    // Toggle the empty-state watermark immediately so it reflects the new
+    // item count without waiting for the deferred timer-driven refresh.
+    updateEmptyHint();
 }
 
 void GuiFrameMain::setFilesCmdLine(const wxArrayString &filenames) {

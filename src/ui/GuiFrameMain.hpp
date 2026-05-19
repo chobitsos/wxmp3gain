@@ -25,6 +25,7 @@ class GuiFrameMain : public FrameMain {
     void OnlstFilesItemSelect(wxListEvent &event);
     void OnlstFilesItemRClick(wxListEvent &event);
     void OnlstFilesKeyDown(wxListEvent &event);
+    void OnlstFilesSize(wxSizeEvent &event);
     void btnProcessStop(wxCommandEvent &event);
     void mnuAddDirectory(wxCommandEvent &event);
     void mnuAddFiles(wxCommandEvent &event);
@@ -45,6 +46,7 @@ class GuiFrameMain : public FrameMain {
   private:
     void updateTxtNormalVolumeDb();
     void updateControls();
+    void updateEmptyHint();
     void loadResources();
     void processExecute();
     void processFile(unsigned long int fileIdx);
@@ -53,6 +55,7 @@ class GuiFrameMain : public FrameMain {
     AppSettings *mp_appSettings;
     ListManager *mp_listManager;
     FileDrop *mp_fileDrop;
+    wxStaticText *mp_emptyHint;
     double m_dblNormalVolume;
     wxString m_exeTool;
     wxArrayString m_exeInputString;
