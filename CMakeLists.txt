@@ -27,9 +27,18 @@ string(TOLOWER ${CMAKE_PROJECT_NAME} CMAKE_BIN_NAME)
 # wxWidgets
 # -----------------------------------------------------------------------------
 if(WIN32)
-    set(wxWidgets_ROOT_DIR "C:/wxMSW-3.2.4_gcc810_Dev")
-    set(wxWidgets_LIB_DIR "C:/wxMSW-3.2.4_gcc810_Dev/lib/gcc810_dll")
-    set(wxWidgets_CONFIGURATION mwsu)
+    # Default to the official wxWidgets 3.2.4 gcc810 dev pack layout, but allow
+    # the build environment (e.g. CI using MSYS2/MinGW system packages) to
+    # override these paths from the command line via -D<var>=...
+    if(NOT DEFINED wxWidgets_ROOT_DIR)
+        set(wxWidgets_ROOT_DIR "C:/wxMSW-3.2.4_gcc810_Dev")
+    endif()
+    if(NOT DEFINED wxWidgets_LIB_DIR)
+        set(wxWidgets_LIB_DIR "C:/wxMSW-3.2.4_gcc810_Dev/lib/gcc810_dll")
+    endif()
+    if(NOT DEFINED wxWidgets_CONFIGURATION)
+        set(wxWidgets_CONFIGURATION mwsu)
+    endif()
 endif()
 
 find_package(wxWidgets REQUIRED)
@@ -188,8 +197,15 @@ if(WIN32)
     install(FILES "${CMAKE_DOC_DIR}/CHANGELOG.md" DESTINATION "/" RENAME "Changelog.txt")
     install(FILES "${CMAKE_DOC_DIR}/COPYING" DESTINATION "/" RENAME "License.txt")
     install(FILES "${CMAKE_DOC_DIR}/README.md" DESTINATION "/" RENAME "Readme.txt")
-    install(FILES "C:/wxMSW-3.2.4_gcc810_Dev/lib/gcc810_dll/wxmsw32u_core_gcc810.dll" DESTINATION "/")
-    install(FILES "C:/wxMSW-3.2.4_gcc810_Dev/lib/gcc810_dll/wxbase32u_gcc810.dll" DESTINATION "/")
+    # Only copy the wxWidgets prebuilt DLLs from the gcc810 dev pack if they
+    # actually exist on disk; on MSYS2/MinGW builds the DLLs come from the
+    # toolchain instead and are bundled by the packaging step.
+    if(EXISTS "C:/wxMSW-3.2.4_gcc810_Dev/lib/gcc810_dll/wxmsw32u_core_gcc810.dll")
+        install(FILES "C:/wxMSW-3.2.4_gcc810_Dev/lib/gcc810_dll/wxmsw32u_core_gcc810.dll" DESTINATION "/")
+    endif()
+    if(EXISTS "C:/wxMSW-3.2.4_gcc810_Dev/lib/gcc810_dll/wxbase32u_gcc810.dll")
+        install(FILES "C:/wxMSW-3.2.4_gcc810_Dev/lib/gcc810_dll/wxbase32u_gcc810.dll" DESTINATION "/")
+    endif()
 else()
     install(TARGETS ${CMAKE_BIN_NAME} DESTINATION "bin")
     install(DIRECTORY "${CMAKE_DATA_DIR}/" DESTINATION "share/${CMAKE_BIN_NAME}/${CMAKE_DATA_DIR}")

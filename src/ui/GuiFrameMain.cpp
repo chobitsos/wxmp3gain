@@ -26,13 +26,13 @@ GuiFrameMain::GuiFrameMain(wxWindow *parent) : FrameMain(parent), m_processRunni
     gui_lstFiles->SetDropTarget(mp_fileDrop);
 
     // Title List
-    gui_lstFiles->InsertColumn(ID_LIST_FILE, _("File"), wxLIST_FORMAT_LEFT, 200);
-    gui_lstFiles->InsertColumn(ID_LIST_FOLDER, _("Folder"), wxLIST_FORMAT_LEFT, 200);
-    gui_lstFiles->InsertColumn(ID_LIST_VOLUME, _("Volume"), wxLIST_FORMAT_LEFT, 60);
-    gui_lstFiles->InsertColumn(ID_LIST_CLIPPING, _("Clipping"), wxLIST_FORMAT_LEFT, 70);
-    gui_lstFiles->InsertColumn(ID_LIST_GAIN_DB, _("Gain (dB)"), wxLIST_FORMAT_LEFT, 80);
-    gui_lstFiles->InsertColumn(ID_LIST_GAIN_MP3, _("Gain (mp3)"), wxLIST_FORMAT_LEFT, 80);
-    gui_lstFiles->InsertColumn(ID_LIST_TAG_INFO, _("Tag info"), wxLIST_FORMAT_LEFT, 70);
+    gui_lstFiles->InsertColumn(ID_LIST_FILE, wxString::FromUTF8("文件"), wxLIST_FORMAT_LEFT, 200);
+    gui_lstFiles->InsertColumn(ID_LIST_FOLDER, wxString::FromUTF8("文件夹"), wxLIST_FORMAT_LEFT, 200);
+    gui_lstFiles->InsertColumn(ID_LIST_VOLUME, wxString::FromUTF8("音量"), wxLIST_FORMAT_LEFT, 60);
+    gui_lstFiles->InsertColumn(ID_LIST_CLIPPING, wxString::FromUTF8("裁切"), wxLIST_FORMAT_LEFT, 70);
+    gui_lstFiles->InsertColumn(ID_LIST_GAIN_DB, wxString::FromUTF8("增益 (dB)"), wxLIST_FORMAT_LEFT, 80);
+    gui_lstFiles->InsertColumn(ID_LIST_GAIN_MP3, wxString::FromUTF8("转换后音量"), wxLIST_FORMAT_LEFT, 80);
+    gui_lstFiles->InsertColumn(ID_LIST_TAG_INFO, wxString::FromUTF8("标签信息"), wxLIST_FORMAT_LEFT, 70);
 
     // Set statusbar widths
     const int wxStatusBarWidths[3] = {-10, -10, -5};

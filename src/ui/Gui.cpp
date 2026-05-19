@@ -23,7 +23,7 @@ FrameMain::FrameMain( wxWindow* parent, wxWindowID id, const wxString& title, co
 	gui_boxNormalVolume = new wxBoxSizer( wxHORIZONTAL );
 
 	wxStaticText* m_staticText9;
-	m_staticText9 = new wxStaticText( m_panel4, wxID_ANY, _("Normal volume (dB):"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_staticText9 = new wxStaticText( m_panel4, wxID_ANY, wxString::FromUTF8("设定音量大小 (dB):"), wxDefaultPosition, wxDefaultSize, 0 );
 	m_staticText9->Wrap( -1 );
 	gui_boxNormalVolume->Add( m_staticText9, 0, wxALL|wxALIGN_CENTER_VERTICAL, 5 );
 
@@ -161,29 +161,32 @@ FrameMain::FrameMain( wxWindow* parent, wxWindowID id, const wxString& title, co
 
 	gui_menuBar->Append( gui_mnbHelp, _("&Help") );
 
-	this->SetMenuBar( gui_menuBar );
+	// Menu bar intentionally not attached to the frame (UI simplification).
+	// Menus and their items are kept alive so that ID-based Enable() calls
+	// (e.g. gui_menuBar->Enable(ID_*) in GuiFrameMain) remain valid.
+	// this->SetMenuBar( gui_menuBar );
 
 	gui_mainStatusBar = this->CreateStatusBar( 3, wxSTB_SIZEGRIP, wxID_ANY );
-	gui_toolBar = this->CreateToolBar( wxTB_FLAT|wxTB_HORIZONTAL, wxID_ANY );
-	gui_tbAddFolder = gui_toolBar->AddTool( ID_ADD_FOLDER, wxEmptyString, wxArtProvider::GetBitmap( wxART_MISSING_IMAGE, wxART_TOOLBAR ), wxNullBitmap, wxITEM_NORMAL, _("Add folder"), wxEmptyString, NULL );
+	gui_toolBar = this->CreateToolBar( wxTB_FLAT|wxTB_HORIZONTAL|wxTB_TEXT, wxID_ANY );
+	gui_tbAddFolder = gui_toolBar->AddTool( ID_ADD_FOLDER, wxString::FromUTF8("导入文件夹"), wxArtProvider::GetBitmap( wxART_MISSING_IMAGE, wxART_TOOLBAR ), wxNullBitmap, wxITEM_NORMAL, wxString::FromUTF8("导入文件夹"), wxEmptyString, NULL );
 
-	gui_tbAddFiles = gui_toolBar->AddTool( ID_ADD_FILES, wxEmptyString, wxArtProvider::GetBitmap( wxART_MISSING_IMAGE, wxART_TOOLBAR ), wxNullBitmap, wxITEM_NORMAL, _("Add files"), wxEmptyString, NULL );
+	gui_tbAddFiles = gui_toolBar->AddTool( ID_ADD_FILES, wxString::FromUTF8("导入文件"), wxArtProvider::GetBitmap( wxART_MISSING_IMAGE, wxART_TOOLBAR ), wxNullBitmap, wxITEM_NORMAL, wxString::FromUTF8("导入文件"), wxEmptyString, NULL );
 
-	gui_tbRemoveFiles = gui_toolBar->AddTool( ID_REMOVE_FILES, wxEmptyString, wxArtProvider::GetBitmap( wxART_MISSING_IMAGE, wxART_TOOLBAR ), wxNullBitmap, wxITEM_NORMAL, _("Remove files"), wxEmptyString, NULL );
+	gui_tbRemoveFiles = gui_toolBar->AddTool( ID_REMOVE_FILES, wxString::FromUTF8("删除文件"), wxArtProvider::GetBitmap( wxART_MISSING_IMAGE, wxART_TOOLBAR ), wxNullBitmap, wxITEM_NORMAL, wxString::FromUTF8("删除文件"), wxEmptyString, NULL );
 
-	gui_tbClearList = gui_toolBar->AddTool( ID_CLEAR_LIST, wxEmptyString, wxArtProvider::GetBitmap( wxART_MISSING_IMAGE, wxART_TOOLBAR ), wxNullBitmap, wxITEM_NORMAL, _("Clear list"), wxEmptyString, NULL );
-
-	gui_toolBar->AddSeparator();
-
-	gui_tbAnalyze = gui_toolBar->AddTool( ID_ANALYZE, wxEmptyString, wxArtProvider::GetBitmap( wxART_MISSING_IMAGE, wxART_TOOLBAR ), wxNullBitmap, wxITEM_NORMAL, _("Analyze"), wxEmptyString, NULL );
-
-	gui_tbGain = gui_toolBar->AddTool( ID_GAIN, wxEmptyString, wxArtProvider::GetBitmap( wxART_MISSING_IMAGE, wxART_TOOLBAR ), wxNullBitmap, wxITEM_NORMAL, _("Gain"), wxEmptyString, NULL );
+	gui_tbClearList = gui_toolBar->AddTool( ID_CLEAR_LIST, wxString::FromUTF8("清空列表"), wxArtProvider::GetBitmap( wxART_MISSING_IMAGE, wxART_TOOLBAR ), wxNullBitmap, wxITEM_NORMAL, wxString::FromUTF8("清空列表"), wxEmptyString, NULL );
 
 	gui_toolBar->AddSeparator();
 
-	gui_tbSettings = gui_toolBar->AddTool( ID_SETTINGS, wxEmptyString, wxArtProvider::GetBitmap( wxART_MISSING_IMAGE, wxART_TOOLBAR ), wxNullBitmap, wxITEM_NORMAL, _("Settings"), wxEmptyString, NULL );
+	gui_tbAnalyze = gui_toolBar->AddTool( ID_ANALYZE, wxString::FromUTF8("解析文件"), wxArtProvider::GetBitmap( wxART_MISSING_IMAGE, wxART_TOOLBAR ), wxNullBitmap, wxITEM_NORMAL, wxString::FromUTF8("解析文件"), wxEmptyString, NULL );
 
-	gui_tbAbout = gui_toolBar->AddTool( ID_ABOUT, wxEmptyString, wxArtProvider::GetBitmap( wxART_MISSING_IMAGE, wxART_TOOLBAR ), wxNullBitmap, wxITEM_NORMAL, _("About"), wxEmptyString, NULL );
+	gui_tbGain = gui_toolBar->AddTool( ID_GAIN, wxString::FromUTF8("转换文件"), wxArtProvider::GetBitmap( wxART_MISSING_IMAGE, wxART_TOOLBAR ), wxNullBitmap, wxITEM_NORMAL, wxString::FromUTF8("转换文件"), wxEmptyString, NULL );
+
+	gui_toolBar->AddSeparator();
+
+	gui_tbSettings = gui_toolBar->AddTool( ID_SETTINGS, wxString::FromUTF8("设置"), wxArtProvider::GetBitmap( wxART_MISSING_IMAGE, wxART_TOOLBAR ), wxNullBitmap, wxITEM_NORMAL, wxString::FromUTF8("设置"), wxEmptyString, NULL );
+
+	gui_tbAbout = gui_toolBar->AddTool( ID_ABOUT, wxString::FromUTF8("关于本工具"), wxArtProvider::GetBitmap( wxART_MISSING_IMAGE, wxART_TOOLBAR ), wxNullBitmap, wxITEM_NORMAL, wxString::FromUTF8("关于本工具"), wxEmptyString, NULL );
 
 	gui_toolBar->Realize();
 
@@ -270,6 +273,9 @@ FrameMain::~FrameMain()
 	this->Disconnect( wxID_ANY, wxEVT_TIMER, wxTimerEventHandler( FrameMain::OnTimer1Trigger ) );
 
 	delete gui_menu;
+	// gui_menuBar is no longer attached to the frame, so it is not deleted
+	// automatically by wxFrame; release it here to avoid a memory leak.
+	delete gui_menuBar;
 }
 
 DialogSettings::DialogSettings( wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style ) : wxDialog( parent, id, title, pos, size, style )
