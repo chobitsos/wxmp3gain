@@ -1,14 +1,15 @@
 name: Windows x64 build
 
 on:
+  # Run on every branch push and every tag push, so the resulting .exe is
+  # produced and uploaded as a workflow artifact for any branch (including
+  # `copilot/*` working branches), not just `main`.
   push:
     branches:
-      - main
+      - "**"
     tags:
-      - "v*"
+      - "**"
   pull_request:
-    branches:
-      - main
   workflow_dispatch:
 
 jobs:
